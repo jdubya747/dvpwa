@@ -1,7 +1,9 @@
+import re
+import logging
 from typing import Optional, NamedTuple
-
 from aiopg.connection import Connection
 
+log = logging.getLogger(__name__)
 
 class Student(NamedTuple):
     id: int
@@ -39,8 +41,13 @@ class Student(NamedTuple):
 
     @staticmethod
     async def create(conn: Connection, name: str):
+        # Prevent sql injection by allowing only aphabetic characters
+        # Fix is for this specific instance
+        log.info(f'App is creating student {name}')
+        name1="".join(c for c in name if c.isalpha())
+        log.info(f'App removed i characters. Student name will be {name1}')
         q = ("INSERT INTO students (name) "
-             "VALUES ('%(name)s')" % {'name': name})
+             "VALUES ('%(name)s')" % {'name': name1})
         async with conn.cursor() as cur:
             await cur.execute(q)
 
